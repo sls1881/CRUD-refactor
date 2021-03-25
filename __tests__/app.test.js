@@ -4,27 +4,27 @@ const request = require('supertest');
 const app = require('../lib/app');
 const Order = require('../lib/models/Order.js');
 
-jest.mock('twilio', () => () => ({
-  messages: {
-    create: jest.fn(),
-  },
-}));
+jest.mock('../lib/utils/twilio.js');
+const twilio = require('../lib/utils/twilio');
 
-describe('03_separation-of-concerns-demo routes', () => {
+describe('endpoints', () => {
   beforeEach(() => {
     return setup(pool);
+  });
+
+  let order;
+  beforeEach(async () => {
+    order = await Order.insert({ quantity: 10 });
+
+    twilio.sendSms.mockClear();
   });
 
   it('creates a new order in our database and sends a text message', () => {
     return request(app)
       .post('/api/v1/orders')
       .send({ quantity: 10 })
-      .then((res) => {
-        // expect(createMessage).toHaveBeenCalledTimes(1);
-        expect(res.body).toEqual({
-          id: '1',
-          quantity: 10,
-        });
+      .then(() => {
+        expect(twilio.sendSms).toHaveBeenCalledTimes(1);
       });
   });
 
@@ -40,16 +40,15 @@ describe('03_separation-of-concerns-demo routes', () => {
 
   //Get endpoint
   it('gets all the orders from the database', async () => {
-    //Posting another order
-    const expectation = await Order.insert({ quantity: 20 });
-
+    //Await the promise to get the order(s)
     const res = await request(app).get('/api/v1/orders');
-
-    expect(res.body).toEqual([expectation]);
+    //Expect the returned body to match the new order
+    expect(res.body).toEqual([order]);
   });
 
   //Get by ID endpoint
   it('get an order by ID', async () => {
+    //Insert a new order to test
     const order = await Order.insert({ quantity: 15 });
 
     const res = await request(app).get(`/api/v1/orders/${order.id}`);
@@ -58,6 +57,7 @@ describe('03_separation-of-concerns-demo routes', () => {
   });
 
   it('updates a new order in our database and sends a text message', async () => {
+    //Insert a new order to test
     const order = await Order.insert({ quantity: 40 });
 
     return request(app)
@@ -73,20 +73,12 @@ describe('03_separation-of-concerns-demo routes', () => {
   });
 
   //Delete by ID endpoint
-  it('delete an order by ID', async () => {
+  it('delete an order by ID and send a text message', () => {
     //creates a new order to manipulate in this test
-    const order = await Order.insert({ quantity: 15 });
-
-    const res = await request(app)
-    .delete(`/api/v1/orders/${order.id}`)
-    .then((res) => {
-      // expect(createMessage).toHaveBeenCalledTimes(1);
-
-    expect(res.body).toEqual({
-      id: order.id,
-      quantity: 15,
-    });
+    return request(app)
+      .delete(`/api/v1/orders/${order.id}`)
+      .then(() => {
+        expect(twilio.sendSms).toHaveBeenCalledTimes(1);
+      });
   });
-});
-
 });
