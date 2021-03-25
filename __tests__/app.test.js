@@ -56,7 +56,7 @@ describe('03_separation-of-concerns-demo routes', () => {
     const res = await request(app)
     .get(`/api/v1/orders/${order.id}`);
 
-    expect(res.body).toEqual([order/1]);
+    expect(res.body).toEqual(order);
   });
   });
 
