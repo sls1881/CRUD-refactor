@@ -48,27 +48,18 @@ describe('endpoints', () => {
 
   //Get by ID endpoint
   it('get an order by ID', async () => {
-    //Insert a new order to test
-    const order = await Order.insert({ quantity: 15 });
-
     const res = await request(app).get(`/api/v1/orders/${order.id}`);
 
     expect(res.body).toEqual(order);
   });
 
   it('updates a new order in our database and sends a text message', async () => {
-    //Insert a new order to test
-    const order = await Order.insert({ quantity: 40 });
-
-    return request(app)
+  return request(app)
       .put(`/api/v1/orders/${order.id}`)
       .send({ quantity: 50 })
-      .then((res) => {
-        // expect(createMessage).toHaveBeenCalledTimes(1);
-        expect(res.body).toEqual({
-          id: order.id,
-          quantity: 50,
-        });
+      .then(() => {
+      
+        expect(twilio.sendSms).toHaveBeenCalledTimes(1);
       });
   });
 
