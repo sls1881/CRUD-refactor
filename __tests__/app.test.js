@@ -41,10 +41,9 @@ describe('03_separation-of-concerns-demo routes', () => {
   //Get endpoint
   it('gets all the orders from the database', async () => {
     //Posting another order
-    const expectation =  await Order.insert({ quantity: 20 });
+    const expectation = await Order.insert({ quantity: 20 });
 
-    const res = await request(app)
-    .get('/api/v1/orders');
+    const res = await request(app).get('/api/v1/orders');
 
     expect(res.body).toEqual([expectation]);
   });
@@ -53,10 +52,23 @@ describe('03_separation-of-concerns-demo routes', () => {
   it('get and order by ID', async () => {
     const order = await Order.insert({ quantity: 15 });
 
-    const res = await request(app)
-    .get(`/api/v1/orders/${order.id}`);
+    const res = await request(app).get(`/api/v1/orders/${order.id}`);
 
     expect(res.body).toEqual(order);
   });
-  });
 
+  it('updates a new order in our database and sends a text message', async () => {
+    const order = await Order.insert({ quantity: 40 });
+
+    return request(app)
+      .put(`/api/v1/orders/${order.id}`)
+      .send({ quantity: 50 })
+      .then((res) => {
+        // expect(createMessage).toHaveBeenCalledTimes(1);
+        expect(res.body).toEqual({
+          id: order.id,
+          quantity: 50,
+        });
+      });
+  });
+});
