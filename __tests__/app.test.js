@@ -49,7 +49,7 @@ describe('03_separation-of-concerns-demo routes', () => {
   });
 
   //Get by ID endpoint
-  it('get and order by ID', async () => {
+  it('get an order by ID', async () => {
     const order = await Order.insert({ quantity: 15 });
 
     const res = await request(app).get(`/api/v1/orders/${order.id}`);
@@ -71,4 +71,22 @@ describe('03_separation-of-concerns-demo routes', () => {
         });
       });
   });
+
+  //Delete by ID endpoint
+  it('delete an order by ID', async () => {
+    //creates a new order to manipulate in this test
+    const order = await Order.insert({ quantity: 15 });
+
+    const res = await request(app)
+    .delete(`/api/v1/orders/${order.id}`)
+    .then((res) => {
+      // expect(createMessage).toHaveBeenCalledTimes(1);
+
+    expect(res.body).toEqual({
+      id: order.id,
+      quantity: 15,
+    });
+  });
+});
+
 });
